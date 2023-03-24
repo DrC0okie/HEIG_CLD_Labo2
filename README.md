@@ -1,2 +1,7 @@
-# CLD - Lab 02: App scaling on Amazon Web Services
-Auteurs : Anthony David, Timothée Van Hove
+# CLD - LAB02: App Scaling On Amazon Web Services
+
+**Group U : A. David, T. Van Hove**
+
+**Teacher : Prof. Marcel Graf**
+
+**Assistant : Rémi Poulard**
