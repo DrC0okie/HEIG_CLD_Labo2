@@ -1,5 +1,24 @@
-# CLD - Lab 02: App scaling on Amazon Web Services
-Auteurs : Anthony David, Timothée Van Hove
+# CLD - LAB02 : App Scaling On Amazon Web Services
+
+**Group U : A. David, T. Van Hove**
+
+**Date : 06.04.2023**
+
+**Teacher : Prof. Marcel Graf**
+
+**Assistant : Rémi Poulard**
+
+## Table of contents
+
+[TOC]
+
+
+## Introduction
+
+
+This document descibes the successive steps necesseray to successfully complete the laboratory #1 of the CLD course. It will also allow our group to answer the various questions asked in the lab instructions. We decided to include the precise procedure for every step. This would be useful in case we have to do in again later.
+
+TO DO : complete
 
 
 
@@ -105,3 +124,13 @@ gru-vanhove-drupal-db.c4ryp0xx1ffk.us-east-1.rds.amazonaws.com
 
 ## 2 Configure Drupal instance to use the RDS DB
 
+
+## Part 3 : Create a custom virtual machine image
+
+## Part 4 : Create a load balancer
+
+## Part 5 : Lauch a second instance from the custom image
+
+## Part 6 :  Test the distribued application
+
+## Part 7 : Release cloud ressources
