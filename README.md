@@ -139,6 +139,8 @@ $databases['default']['default'] = array (
 
 
 
+
+
 ## Part 3 : Create a custom virtual machine image
 
 In this part we had to create an image of our EC2 instance. This image will be used later to create new instances with the exact same configuration.
@@ -206,6 +208,10 @@ So we send HTTP requests on the Drupal home page because we find interesting to 
 
 The response time graphs are saved from JMeter. We didn't know how to resize the graphs to make them more readable.
 
+### Environment
+
+Please note that the following load tests have been done with a laptop on a WIFI connection, that adds a significant amount of latency in the requests and responses.
+
 ### Check that the load balancer works
 
 We began to send 3 requests to the load balancer to see if the requests are sent to our 2 different instances.
@@ -233,7 +239,17 @@ So we can see that the load is balanced between our 2 instances. Furthermore, du
 
 ### 100 users
 
-Until 100 threads, nothing to see, but with more and more connection we begin to see those logs:
+Until 100 threads, nothing special to see. The servers seem to handle the charge well.
+
+| # Requests | Average RT [ms] | Median RT [ms] | Min RT [ms] | Max RT [ms] | % error |
+| ---------- | --------------- | -------------- | ----------- | ----------- | ------- |
+| 100        | 709             | 254            | 234         | 1450        | 0       |
+
+![](figures/100requests.png)
+
+
+
+With more and more connection we begin to see those logs:
 
 ```
 ::1 - - [29/Mar/2023:14:35:17 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.29 (Ubuntu) (internal dummy connection)"
@@ -247,33 +263,45 @@ Apparently, those "dummy" connections are the way Apache tells its child process
 
 ### 200 users
 
-At 200 threads, we can not see a big difference in terms of response time. The server seems to process correctly all the incoming requests. In jmeter, we don't see any arrors in the result tree panel.
-
-![](figures/Response_Time_Graph_200.png)
-
-![](figures/tree_panel.png)
-
-------
+At 200 threads, we begin to see a bigger response time (RT).  However, the server seems to process correctly all the incoming requests, because we have 0% of error packets.
 
 
 
-### 600 users
+| # Requests | Average RT [ms] | Median RT [ms] | Min RT [ms] | Max RT [ms] | % error |
+| ---------- | --------------- | -------------- | ----------- | ----------- | ------- |
+| 200        | 2817            | 1261           | 234         | 7358        | 0       |
 
-at 600 threads, we can not see a big difference in terms of response time. The server seems to process correctly all the incoming requests. In jmeter, we don't see any arrors in the result tree panel.
-
-![](figures/Response Time Graph_600.png)
+![](figures/200requests.png)
 
 ------
 
 
 
-### 900 users
+### 400 users
 
-At 900 threads, we can clearly see that the response time increase exponentially until 16 seconds. The servers can not handle the throughput. Additionally we can see a lot of errors in the servers response in the result tree panel.
+at 400 threads, The number of errors increased to reach 25%. The response time begin to be very high, with a median RT at 7.2 seconds.
 
-![](figures/Response_Time_Graph_900.png)
+| # Requests | Average RT [ms] | Median RT [ms] | Min RT [ms] | Max RT [ms] | % error |
+| ---------- | --------------- | -------------- | ----------- | ----------- | ------- |
+| 400        | 9407            | 7264           | 233         | 21063       | 25      |
 
-![](figures/tree_panel_errors.png)
+![](figures/400requests.png)
+
+------
+
+
+
+### 800 users
+
+At 800 threads, we can clearly see that the response time is no longer viable, with a median at 17 seconds. The servers can not handle the throughput, as we can see 73% of error responses.
+
+| # Requests | Average RT [ms] | Median RT [ms] | Min RT [ms] | Max RT [ms] | % error |
+| ---------- | --------------- | -------------- | ----------- | ----------- | ------- |
+| 800        | 16838           | 17044          | 234         | 21079       | 73      |
+
+![](figures/800requests.png)
+
+
 
 ------
 
