@@ -15,13 +15,13 @@
 
 ## Introduction
 
-This document contains all the deliverables of the laboratory #2 of the CLD course. We will not include the precise procedure followed by our group along the lab, however, we will discuss some elements and configurations about this laboratory.
+This document contains all the deliverables for Laboratory #2 of the CLD course. We will not include the precise procedure followed by our group during the lab; however, we will discuss some elements and configurations related to this laboratory.
 
-In this lab, we are going to create a RDS instance that runs MySQL, then we will migrate the Drupal database from our EC2 instance to the RDS one. After that we will create a load balancer to balance the traffic on 2 of our EC2 instances. Finally we will do some load tests with Jmeter and discuss the results.
+During this lab, we will create an RDS instance that runs MySQL. Then, we will migrate the Drupal database from our EC2 instance to the RDS instance. After that, we will create a load balancer to balance the traffic between two of our EC2 instances. Finally, we will perform some load tests with JMeter and discuss the results.
 
 ## Part 1: Create a database using RDS
 
-In this task, we had to create and configure a AWS RDS instance that runs MySQL 8.0.27.
+For this task, we were required to create and configure an AWS RDS instance running MySQL version 8.0.27.
 
 ## Deliverable 1
 
@@ -41,7 +41,7 @@ Our RDS instance is an on demand one.
 
 #### DB instance classes
 
-The DB instance class determines the computation and memory capacity of an Amazon RDS DB instance. A DB instance class consists of both the DB instance type and the size. In our case we selected the db.t3.micro. It provides a baseline performance level, with the ability to burst to full CPU usage. These instance classes provide more computing capacity than the previous db.t2 instance classes. They are powered by the AWS Nitro System, a combination of dedicated hardware and lightweight hypervisor.
+The computation and memory capacity of an Amazon RDS DB instance are determined by its DB instance class, which comprises the DB instance type and size. For this project, we selected the db.t3.micro instance class, which offers a baseline performance level with the ability to burst to full CPU usage. These instance classes provide greater computing capacity than the earlier db.t2 instance classes, and they are powered by the AWS Nitro System, a combination of dedicated hardware and a lightweight hypervisor.
 
 #### Single vs Multi AZ deployment
 
@@ -55,9 +55,9 @@ The DB instance class determines the computation and memory capacity of an Amazo
 >
 > [Source](https://aws.amazon.com/rds/features/multi-az/)
 
-Additionally, it is possible to deploy RDS Multi-AZ with 2 readable standbys. It means that 2 standby DB instances instead of 1 to act as failover targets and serve read traffic, and can perform up to 2x faster transaction commits compared to Amazon RDS Multi-AZ with one standby.
+Furthermore, it is possible to deploy RDS Multi-AZ with two readable standbys, allowing for two standby DB instances to serve as failover targets and handle read traffic. This configuration can result in up to 2x faster transaction commits compared to Amazon RDS Multi-AZ with only one standby.
 
-In the other hand, with a single-AZ deployment, there is no such automatic failover mechanisms.
+On the other hand, in a single-AZ deployment, there are no automatic failover mechanisms in place.
 
 You can watch an introduction video to RDS multi-AZ [here.](https://youtu.be/_MROZtLtCcA)
 
@@ -79,7 +79,7 @@ The following EC2 estimate pricing has been calculated with the new [AWS Pricing
 
 ![EC2_Costs](figures/EC2_MonthlyCosts.png)
 
-We can see that the RDS is more expensive that the corresponding EC2 instance (5.12 USD, so 30% more expensive). This difference can be explained by comparing the following table ([Source](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html#Welcome.Concepts.RDS)) :
+It's evident that the RDS is more expensive than the corresponding EC2 instance, with a cost of 5.12 USD, making it approximately 30% more expensive. This cost difference can be attributed to factors outlined in the following table. ([Source](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html#Welcome.Concepts.RDS)) :
 
 | Feature                     | Amazon EC2 management | Amazon RDS management |
 | --------------------------- | --------------------- | --------------------- |
@@ -95,19 +95,19 @@ We can see that the RDS is more expensive that the corresponding EC2 instance (5
 | Hardware lifecycle          | AWS                   | AWS                   |
 | Power, network, and cooling | AWS                   | AWS                   |
 
-We can see that a lot of features are managed by AWS instead of the customer (fully managed), and this management has an extra cost. Now if we compare with on-premise management, it would be fully done by the user. So an IT manager would assume full responsibility for the server, operating system, and software.
+It's noticeable that many features are fully managed by AWS rather than the customer, and this management service comes with an additional cost. In comparison, on-premises management is fully handled by the user. An IT manager, in this case, would assume full responsibility for the server, operating system, and software.
 
 ### 1.3 RDS vs EC2 analysis 
 
 #### Arguments in favor of RDS
 
-RDS offers automatic backups and encryption. RDS takes full responsibility for the database. Configuration, management, maintenance, and security is automated by AWS. It allows to configure read replicas or set up synchronous replication across multiple AZ for enhanced performance and availability. It could be a huge time saver if we had to deploy a DB in multiple AZ with multiple standbys, but time is money, so this solution is more expensive. Inspired by this [Source](https://serverguy.com/comparison/pros-cons-rds-vs-ec2-mysql-aws/)
+RDS provides automatic backups and encryption, taking full responsibility for the database's configuration, management, maintenance, and security through AWS automation. This enables users to configure read replicas or set up synchronous replication across multiple AZs for improved performance and availability. While deploying a database in multiple AZs with multiple standbys can be time-consuming, it can be a huge time saver with RDS. However, time is money, and this solution is more expensive. Inspired by this [Source](https://serverguy.com/comparison/pros-cons-rds-vs-ec2-mysql-aws/)
 
 #### Arguments in favor of EC2 with DB engine
 
-It gives more flexibility and granularity on various aspects of the system. for example, it is possible to choose a specific OS running a specific version, or you could use EBS RAID and stripping configurations for higher performance. It would be our only solution if we wanted to run a DB engine in an older unsupported version, or if the data access time and bandwith is critical. It could also be a cheaper choice for test/dev DB environment that do not need to be in production. Inspired by this [Source](https://serverguy.com/comparison/pros-cons-rds-vs-ec2-mysql-aws/)
+It gives more flexibility and granularity on various aspects of the system. For instance, users can choose a specific OS running a specific version, or they could use EBS RAID and stripping configurations for higher performance. EC2 would be the only solution if a user wants to run a DB engine in an older unsupported version, or if data access time and bandwidth are critical. It could also be a cheaper choice for test/dev DB environments that do not need to be in production. Inspired by this [Source](https://serverguy.com/comparison/pros-cons-rds-vs-ec2-mysql-aws/)
 
-In conclusion, it depends heavily on the needed DB flexibility, the nature of the data that is stored on the DB and the performance needed for the application. 
+In conclusion, the decision between RDS and EC2 with a DB engine heavily depends on the required flexibility of the database, the nature of the data stored, and the performance needed for the application.
 
 ### 1.4 Database endpoint
 
@@ -119,11 +119,11 @@ gru-vanhove-drupal-db.c4ryp0xx1ffk.us-east-1.rds.amazonaws.com
 
 ## Part 2: Configure Drupal instance to use the RDS DB
 
-In this part we had to migrate the drupal DB from our EC2 instance to the RDS instance
+In this part, we were required to migrate the Drupal database from our EC2 instance to the RDS instance.
 
 ## Deliverable 2
 
-Here is the copy of  the part of **settings.php** that configures the database into the report.
+Here is the copy of the part of **settings.php** that configures the database into the report.
 
 ```
 $databases['default']['default'] = array (
@@ -144,7 +144,7 @@ $databases['default']['default'] = array (
 
 ## Part 3 : Create a custom virtual machine image
 
-In this part we had to create an image of our EC2 instance. This image will be used later to create new instances with the exact same configuration.
+In this part, we had to create an image of our EC2 instance. This image will be utilized later to create new instances with the exact same configuration.
 
 ## Deliverable 3
 
@@ -156,7 +156,7 @@ Here is the screenshot of the AWS console showing the AMI parameters.
 
 ## Part 4 : Create a load balancer
 
-In this part we had to create an AWS load balancer that receive the HTTP requests from clients and forward them to the Drupal instances.
+In this part, we had to create an AWS load balancer that receives HTTP requests from clients and forwards them to the Drupal instances.
 
 ## Deliverable 4
 
@@ -190,7 +190,7 @@ In this task we had to launch a second Drupal instance and connect it to the loa
 
    ![](figures/Architecture.png)
 
-   Note that in the diagram, we can see that the 2 EC2 instances are in different availability zones. This is not the case in our configuration, they are in the same AZ. We simply wanted to show that it could be the case as we configured our load balancer to be able to redirect the traffic from 2 different ones. In our configuration the RDS is also in the same AZ (us-east-1b).
+   Please note that in the diagram, we can see that the two EC2 instances are located in different availability zones, but in our configuration, they are both in the same availability zone. We wanted to illustrate that our load balancer is capable of redirecting traffic from multiple availability zones. Additionally, our RDS is also located in the same availability zone (us-east-1b).
 
 2. Here is the estimated monthly costs for using our setup, including the 2 EC2 instances, the elastic load-balancer and the RDS instance. As asked in the lab we did it with the [Simple Monthly Calculator](http://calculator.s3.amazonaws.com/calc5.html), but this calculator will not be available after **Friday, March 31, 2023**.
 
@@ -212,7 +212,7 @@ Except the number of threads, have configured jmeter as follows:
 
 ### Environment
 
-Please note that the following load tests have been done with a low-end laptop on a WIFI connection, through a VPN. This configuration adds a significant amount of latency in the requests and responses.
+Please note that the following load tests were conducted using a low-end laptop with a Wi-Fi connection and through a VPN. This configuration introduces a significant amount of latency in the requests and responses.
 
 ### Check that the load balancer works
 
@@ -231,7 +231,7 @@ Instance 2:
 172.31.86.211 - - [29/Mar/2023:14:23:07 +0000] "GET /drupal/ HTTP/1.1" 200 10264 "-" "Apache-HttpClient/4.5.13 (Java/17.0.6)"
 ```
 
-So we can see that the load is balanced between our 2 instances. Furthermore, we can see in the chart below that the CPU usage of the 2 instances are increasing proportionally on both instances:
+So we can see that the load is balanced between our 2 instances. Additionally, we can observe from the chart below that the CPU usage of both instances is increasing proportionally:
 
 ![](figures/CPU_Usage.png)
 
@@ -255,7 +255,7 @@ With more and more connection we begin to see those logs:
 ::1 - - [29/Mar/2023:14:35:17 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.29 (Ubuntu) (internal dummy connection)"
 ```
 
-Apparently, those "dummy" connections are the way Apache tells its child processed that the have to die, so this is not really errors not errors.
+In Apache, internal dummy connections are created periodically to ensure that worker processes are still available to handle requests. This helps the server to avoid situations where all worker processes are tied up with long-running requests, and new requests cannot be processed until the long-running requests are completed. When Apache creates an internal dummy connection, it behaves like any other client, sending an HTTP request to the server and waiting for a response. Once the response is received, the connection is closed.
 
 
 
@@ -362,11 +362,11 @@ The order of the IP addresses returned by the DNS resolver may change from time 
 
 ### Tests conclusion
 
-We can see that with 400 and 800 requests we begin to have time-outs and the response time is becoming too high for a good user experience. furthermore, we have seen that the ELB does not receive all the requests and that in the graphs the CPU load in our 2 instance and our RDS instance was not very high (barely exceeding 1.6% usage for our EC2 instances and 3 % for the RDS instance). Based on the results we provided, it appears that our configuration has 2 major bottlenecks:
+We can observe that with 400 and 800 requests, time-outs occur and the response time becomes too high for a good user experience. Additionally, we noticed that the ELB does not receive all requests, and in the graphs, the CPU load of our 2 EC2 instances and RDS instance barely exceeds 1.6% and 3%, respectively. Based on the results we obtained, it appears that our configuration has two major bottlenecks:
 
-1. The first bottleneck is clearly the response time-outs that are caused outside of the AWS network. It is maybe linked to the environment of the tests, for example the limitations of the laptop wireless NIC , the VPN capabilities or the school network. We must also emphasis the fact that the AWS regions are far away from Switzerland.
-2. The second bottleneck may be inside the AWS infrastructure. The ELB or EC2 instances have no problem responding to the incoming requests, but the limitations are with the network interfaces of our EC2 instances that can not keep up with the traffic and adds more and more latency. The second bottleneck can also be caused by the the limitations of the laptop wireless NIC , the VPN capabilities and the school network, that adds more and more response latency with the traffic increasing.
+1. The first bottleneck is clearly the response time-outs that are caused outside of the AWS network. This may be linked to test environment limitations, such as the laptop's wireless NIC, VPN capabilities, or the school network. We must also emphasize that the AWS regions are far away from Switzerland.
+2. The second bottleneck may be inside the AWS infrastructure. Although the ELB and EC2 instances have no problem responding to incoming requests, the limitations may lie with the network interfaces of our EC2 instances that cannot keep up with the traffic and add more latency. This bottleneck may also be caused by the limitations of the laptop's wireless NIC, VPN capabilities, and the school network, which add more response latency as traffic increases.
 
-In terms of load balancing, our opinion is that the configuration did test the load balancing mechanism of our Application Load Balancer by distributing the traffic among your EC2 instances. The limitations of this simple test include the fact that it does not take into account the diversity of traffic patterns that may occur in a real-world scenario, as well as the fact that it is limited to a specific set of test conditions. A more diverse set of tests that simulate real-world scenarios would be necessary to fully test the system's performance and identify any potential issues or bottlenecks.
+Regarding load balancing, our configuration effectively tests the load balancing mechanism of our Application Load Balancer by distributing traffic among our EC2 instances. However, this simple test has limitations, as it does not take into account the diversity of traffic patterns that may occur in a real-world scenario, and it is limited to a specific set of test conditions. To fully test the system's performance and identify any potential issues or bottlenecks, a more diverse set of tests that simulate real-world scenarios would be necessary.
 
-To perform realistic testing, we could use different types of requests, varying the frequency and intensity of requests, and simulating different user behaviour and patterns. Additionally, we could consider testing the system under different conditions, such as during peak traffic hours or with high levels of concurrent users. 
+To perform realistic testing, we could use different types of requests, varying the frequency and intensity of requests, and simulating different user behaviours and patterns. Additionally, we could consider testing the system under different conditions, such as during peak traffic hours or with high levels of concurrent users.
