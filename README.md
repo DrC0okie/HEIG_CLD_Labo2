@@ -100,7 +100,7 @@ We can see that a lot of feature is managed by AWS instead of the customer (full
 
 #### Arguments in favor of RDS
 
-RDS offers automatic backups and encryption. RDS takes full responsibility for the database. Configuration, management, maintenance, and security is automated by AWS. It allows to configure read replicas or set up synchronous replication across multiple AZ for enhanced performance and availability. It could be a huge time saver if we had to deploy a DB in multiple AZ with multiple stanbys, but time is money, so this solution is more expensive.  Inspired by this [Source](https://serverguy.com/comparison/pros-cons-rds-vs-ec2-mysql-aws/)
+RDS offers automatic backups and encryption. RDS takes full responsibility for the database. Configuration, management, maintenance, and security is automated by AWS. It allows to configure read replicas or set up synchronous replication across multiple AZ for enhanced performance and availability. It could be a huge time saver if we had to deploy a DB in multiple AZ with multiple stanbys, but time is money, so this solution is more expensive. Inspired by this [Source](https://serverguy.com/comparison/pros-cons-rds-vs-ec2-mysql-aws/)
 
 #### Arguments in favor of EC2 with DB engine
 
@@ -185,13 +185,13 @@ In this task we had to launch a second Drupal instance and connect it to the loa
 
    ![](figures/Architecture.png)
 
-   Note that in the diagram, we can see that the 2 EC2 instances are in different availability zones. This is not the case in our configuration, they are in the same AZ. We simply wanted to show that it could be the case as we configured our load balancer to be able to redirect the traffic from 2 different ones.
+   Note that in the diagram, we can see that the 2 EC2 instances are in different availability zones. This is not the case in our configuration, they are in the same AZ. We simply wanted to show that it could be the case as we configured our load balancer to be able to redirect the traffic from 2 different ones. In our configuration the RDS is also in the same AZ (us-east-1b)
 
-2. Here is the estimated monthly costs for using our setup, including the 2 EC2 instances, the elastic load-balancer and  the RDS instance. As asked in the lab we did it with the [Simple Monthly Calculator](http://calculator.s3.amazonaws.com/calc5.html), but this calculator will not be available after **Friday, March 31, 2023**.
+2. Here is the estimated monthly costs for using our setup, including the 2 EC2 instances, the elastic load-balancer and the RDS instance. As asked in the lab we did it with the [Simple Monthly Calculator](http://calculator.s3.amazonaws.com/calc5.html), but this calculator will not be available after **Friday, March 31, 2023**.
 
 ![](figures/Monthly_costs_global_architecture.png)
 
-## Part 6 :  Test the distribued application
+## Part 6 : Test the distribued application
 
 ## Deliverables 6
 
@@ -203,14 +203,11 @@ We except the number of threads, have configured jmeter as follows:
 2. HTTP Request Defaults: ip of the load balancer : `34.238.65.232`
 3. HTTP Cookie Manager: basic configuration
 4. HTTP request: `GET` on `/drupal/`
-
-So we send HTTP requests on the Drupal home page because we find interesting to see if the DB connexion will fail before the HTTP server.
-
-The response time graphs are saved from JMeter. We didn't know how to resize the graphs to make them more readable.
+5. We used a response time graph and an aggregate report to study the results
 
 ### Environment
 
-Please note that the following load tests have been done with a laptop on a WIFI connection, that adds a significant amount of latency in the requests and responses.
+Please note that the following load tests have been done with a low-end laptop on a WIFI connection, through a VPN. This configuration adds a significant amount of latency in the requests and responses.
 
 ### Check that the load balancer works
 
@@ -229,11 +226,9 @@ Instance 2:
 172.31.86.211 - - [29/Mar/2023:14:23:07 +0000] "GET /drupal/ HTTP/1.1" 200 10264 "-" "Apache-HttpClient/4.5.13 (Java/17.0.6)"
 ```
 
-So we can see that the load is balanced between our 2 instances. Furthermore, during our tests, we can see that the CPU usage of the 2 instances are increasing proportionally on both instances:
+So we can see that the load is balanced between our 2 instances. Furthermore, we can see in the chart below that the CPU usage of the 2 instances are increasing proportionally on both instances:
 
 ![](figures/CPU_Usage.png)
-
-------
 
 
 
@@ -257,13 +252,11 @@ With more and more connection we begin to see those logs:
 
 Apparently, those "dummy" connections are the way Apache tells its child processed that the have to die, so this is not really errors not errors.
 
-------
-
 
 
 ### 200 users
 
-At 200 threads, we begin to see a bigger response time (RT).  However, the server seems to process correctly all the incoming requests, because we have 0% of error packets.
+At 200 threads, we begin to see a bigger response time (RT). However, the server seems to process correctly all the incoming requests, because we have 0% of error packets.
 
 
 
@@ -272,8 +265,6 @@ At 200 threads, we begin to see a bigger response time (RT).  However, the serve
 | 200        | 2817            | 1261           | 234         | 7358        | 0       |
 
 ![](figures/200requests.png)
-
-------
 
 
 
@@ -286,8 +277,6 @@ at 400 threads, The number of errors increased to reach 25%. The response time b
 | 400        | 9407            | 7264           | 233         | 21063       | 25      |
 
 ![](figures/400requests.png)
-
-------
 
 
 
@@ -303,7 +292,26 @@ At 800 threads, we can clearly see that the response time is no longer viable, w
 
 
 
-------
+### Bottleneck of the system
+
+It is interesting to see that the CPU usage of our 2 instances is very low in spite of the bad response time. It indicates that this is not the bottleneck of our system. Furthermore, we can see in the graphs below that the UC usage of our RDS instance is also very low (the peek at the beginning is the instance starting up).
+
+![](figures/RDS_usage.png)
+
+Now what is interesting, is the number of the requests received by the load balancer:
+
+![](figures/LoadBalancer_request_count.png)
+
+In the graph above, we can clearly see that the load balancer does not receive the amount of requests that we sent. We can see in the following table, that the % of loss of packets is equivalent to the % of loss in JMeter.
+
+| Sent requests | Received requests | % loss |
+| ------------- | ----------------- | ------ |
+| 100           | 100               | 0%     |
+| 200           | 200               | 0%     |
+| 400           | 300               | 25%    |
+| 800           | 250               | 68%    |
+
+We can conclude that the load balancer works fine, but a great amount of the requests sent to the it is lost, or somehow rejected before reaching the ALB. So the bottleneck is probably outside of the AWS network. It is maybe linked to the environment of the tests, for example the limitations of the laptop wireless NIC or the VPN capabilities.
 
 
 
@@ -314,8 +322,6 @@ We have seen one very strange log. apparently somebody make requests on our serv
 ```
 172.31.86.211 - - [29/Mar/2023:14:33:49 +0000] "GET / HTTP/1.1" 200 11173 "-" "Hello World"
 ```
-
-------
 
 
 
@@ -339,3 +345,14 @@ Addresses:  35.172.196.179
           34.238.65.232
 ```
 
+The order of the IP addresses returned by the DNS resolver may change from time to time because the DNS uses round-robin load balancing to distribute the incoming traffic among the available endpoints. The DNS resolver may rotate the order of the IP addresses returned for the same DNS name on each query to spread the traffic across all endpoints equally.
+
+### Tests conclusion
+
+We can see that with 400 and 800 requests we begin to have error response and the response time is becoming too high for a good user experience. furthermore, we have seen in the graphs that the CPU load in our 2 instance and our RDS instance was not very high.
+
+Based on the results we provided, it appears that the bottleneck in our configuration may not be related to the AWS network because some requests are not received by the load balancer. In terms of load balancing, our opinion is that configuration did test the load balancing mechanism of our Application Load Balancer by distributing the traffic among your EC2 instances. However, the high percentage of error responses and long response times not imputable to the AWS infrastructure cannot be precisely diagnosed.
+
+The limitations of this simple test include the fact that it does not take into account the diversity of traffic patterns that may occur in a real-world scenario, as well as the fact that it is limited to a specific set of test conditions. A more diverse set of tests that simulate real-world scenarios would be necessary to fully test the system's performance and identify any potential issues or bottlenecks.
+
+To perform realistic testing, we could use different types of requests, varying the frequency and intensity of requests, and simulating different user behaviors and patterns. Additionally, we could consider testing the system under different conditions, such as during peak traffic hours or with high levels of concurrent users. 
