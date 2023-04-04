@@ -71,8 +71,6 @@ The following estimated pricing is given when creating the RDS instance.
 
 ![Estimated_monthly_costs](figures/RDS_MonthlyCosts.png)
 
-
-
 ### 1.2 Cost of RDS vs EC2 comparison
 
 The following EC2 estimate pricing has been calculated with the new [AWS Pricing Calculator](https://calculator.aws/#/). We chose this calculator because the [AWS simple monthly calculator](https://calculator.s3.amazonaws.com/index.html) will be retired (Friday, March 31, 2023).
@@ -115,8 +113,6 @@ In conclusion, the decision between RDS and EC2 with a DB engine heavily depends
 gru-vanhove-drupal-db.c4ryp0xx1ffk.us-east-1.rds.amazonaws.com
 ````
 
-
-
 ## Part 2: Configure Drupal instance to use the RDS DB
 
 In this part, we were required to migrate the Drupal database from our EC2 instance to the RDS instance.
@@ -138,10 +134,6 @@ $databases['default']['default'] = array (
 );
 ```
 
-
-
-
-
 ## Part 3 : Create a custom virtual machine image
 
 In this part, we had to create an image of our EC2 instance. This image will be utilized later to create new instances with the exact same configuration.
@@ -151,8 +143,6 @@ In this part, we had to create an image of our EC2 instance. This image will be 
 Here is the screenshot of the AWS console showing the AMI parameters.
 
 ![](figures/AMI.png)
-
-
 
 ## Part 4 : Create a load balancer
 
@@ -257,21 +247,15 @@ With more and more connection we begin to see those logs:
 
 In Apache, internal dummy connections are created periodically to ensure that worker processes are still available to handle requests. This helps the server to avoid situations where all worker processes are tied up with long-running requests, and new requests cannot be processed until the long-running requests are completed. When Apache creates an internal dummy connection, it behaves like any other client, sending an HTTP request to the server and waiting for a response. Once the response is received, the connection is closed.
 
-
-
 ### 200 users
 
 At 200 threads, we begin to see a bigger response time (RT). However, the server seems to process correctly all the incoming requests, because we have 0% of error packets.
-
-
 
 | # Requests | Average RT [ms] | Median RT [ms] | Min RT [ms] | Max RT [ms] | % error |
 | ---------- | --------------- | -------------- | ----------- | ----------- | ------- |
 | 200        | 2817            | 1261           | 234         | 7358        | 0       |
 
 ![](figures/200requests.png)
-
-
 
 ### 400 users
 
@@ -283,8 +267,6 @@ at 400 threads, The number of timed-out requests increased to reach 25%. The res
 
 ![](figures/400requests.png)
 
-
-
 ### 800 users
 
 At 800 threads, we can clearly see that the response time is no longer viable, with a median at 17 seconds. The servers can not handle the throughput, as we can see 73% of timed-out requests.
@@ -295,15 +277,11 @@ At 800 threads, we can clearly see that the response time is no longer viable, w
 
 ![](figures/800requests.png)
 
-
-
 ### Errors received
 
 Every error that we received is a `Connection timed out` , it means that for a request sent, Jmeter did not receive a response from the server.
 
  ![](figures/error.png)
-
-
 
 ### Bottleneck of the system
 
@@ -326,8 +304,6 @@ In the graph above, we can clearly see that the load balancer does not receive t
 
 We can conclude that the load balancer works fine, but a great amount of the requests sent to it, is lost, or somehow dropped before reaching the ELB.
 
-
-
 ### Intriguing log
 
 We have seen one very strange log. apparently somebody make requests on our servers.
@@ -335,8 +311,6 @@ We have seen one very strange log. apparently somebody make requests on our serv
 ```
 172.31.86.211 - - [29/Mar/2023:14:33:49 +0000] "GET / HTTP/1.1" 200 11173 "-" "Hello World"
 ```
-
-
 
 ### ns-lookup
 
